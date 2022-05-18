@@ -17,7 +17,7 @@ stats and makes it possible to explore the database.
 
 ### Installation
 ```
-git clone https://github.com/ecavicc/flagWarehouse.git
+git clone https://github.com/Cyber-Team-Canada/flagWarehouse.git
 cd flagWarehouse/server
 pip3 install -r requirements.txt
 ```
