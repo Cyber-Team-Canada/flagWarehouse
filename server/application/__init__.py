@@ -7,7 +7,9 @@ from flask import Flask
 
 from . import submission_loop
 
+from dotenv import load_dotenv
 
+load_dotenv()
 def create_app():
     app = Flask('flagWarehouse', instance_relative_config=False)
 
