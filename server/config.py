@@ -18,9 +18,9 @@ class Config(object):
     SUB_INTERVAL = int(os.getenv("FW_SUB_INTERVAL", 5))
     SUB_PAYLOAD_SIZE = int(os.getenv("FW_SUB_PAYLOAD_SIZE", 100))
     SUB_HOST = os.getenv("FW_SUB_HOST", "10.1.0.2")
-    SUB_PORT = os.getenv("FW_SUB_PORT", "80")
+    SUB_PORT = int(os.getenv("FW_SUB_PORT", "80"))
     SUB_ENDPOINT = os.getenv("FW_SUB_ENDPOINT", "/flags")
-    SUB_USE_HTTP = True if os.getenv("FW_SUB_USE_HTTP", "False") == "True" else False
+    SUB_USE_HTTP = True if os.getenv("FW_SUB_USE_HTTP", "True") == "True" else False
     SUB_URL = f"http://{SUB_HOST}:{SUB_PORT}{SUB_ENDPOINT}"
 
     SUB_ACCEPTED = os.getenv("FW_SUB_ACCEPTED", "accepted")

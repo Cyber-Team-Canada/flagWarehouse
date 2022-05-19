@@ -73,12 +73,37 @@ def http_submit(flags: List[str], cursor, i, logger):
 
 def tcp_submit(flags: List[str], cursor, i, logger):
     for flag in flags:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((current_app.config['SUB_HOST'], current_app.config['SUB_PORT']))
-            s.sendall(bytearray(flag, "utf-8"))
-            response = s.recv(1024)
-            print(f"Received {response!r}")
-            i += 1
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(current_app.config['SUB_INTERVAL'] / current_app.config['SUB_LIMIT'])
+                s.connect((current_app.config['SUB_HOST'], current_app.config['SUB_PORT']))
+                s.sendall(bytearray(flag, "utf-8") + b"\n")
+                response = s.recv(1024).decode()
+                logger.info(f"{flag}: {response}")
+                if (current_app.config['SUB_INVALID'].lower() in response.lower() or
+                        current_app.config['SUB_YOUR_OWN'].lower() in response.lower() or
+                        current_app.config['SUB_STOLEN'].lower() in response.lower() or
+                        current_app.config['SUB_NOP'].lower() in response.lower()):
+                    cursor.execute('''
+                    UPDATE flags
+                    SET status = ?, server_response = ?
+                    WHERE flag = ?
+                    ''', (current_app.config['DB_SUB'], current_app.config['DB_ERR'], flag))
+                elif current_app.config['SUB_OLD'].lower() in response.lower():
+                    cursor.execute('''
+                    UPDATE flags
+                    SET status = ?, server_response = ?
+                    WHERE flag = ?
+                    ''', (current_app.config['DB_SUB'], current_app.config['DB_EXP'], flag))
+                elif current_app.config['SUB_ACCEPTED'].lower() in response.lower():
+                    cursor.execute('''
+                    UPDATE flags
+                    SET status = ?, server_response = ?
+                    WHERE flag = ?
+                    ''', (current_app.config['DB_SUB'], current_app.config['DB_SUCC'], flag))
+                i += 1
+        except:
+            return False, i
     return True, i
 
 
