@@ -7,8 +7,8 @@ class Config(object):
     VM_SUBNET = os.getenv("FW_VM_SUBNET", "60")
     YOUR_TEAM = f"10.{VM_SUBNET}.{TEAM_ID}.1"
     TEAM_TOKEN = os.getenv("FW_TEAM_TOKEN", "8a8d25f465bec01d")
-    TEAMS = ["10.60.{}.1".format(i) for i in range(1, 35)]
-    TEAMS.remove(YOUR_TEAM)
+    TEAMS = ["127.0.0.1"]
+    # TEAMS.remove(YOUR_TEAM)
 
     ROUND_DURATION = int(os.getenv("FW_ROUND_DURATION", 120))
     FLAG_ALIVE = 5 * ROUND_DURATION
@@ -20,7 +20,7 @@ class Config(object):
     SUB_HOST = os.getenv("FW_SUB_HOST", "10.1.0.2")
     SUB_PORT = os.getenv("FW_SUB_PORT", "80")
     SUB_ENDPOINT = os.getenv("FW_SUB_ENDPOINT", "/flags")
-    SUB_USE_TCP = True if os.getenv("FW_SUB_USE_TCP", "False") == "True" else False
+    SUB_USE_HTTP = True if os.getenv("FW_SUB_USE_HTTP", "False") == "True" else False
     SUB_URL = f"http://{SUB_HOST}:{SUB_PORT}{SUB_ENDPOINT}"
 
     SUB_ACCEPTED = os.getenv("FW_SUB_ACCEPTED", "accepted")
