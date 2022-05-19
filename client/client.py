@@ -64,10 +64,8 @@ def parse_args():
 
 
 def run_exploit(exploit: str, ip: str, round_duration: int, server_url: str, token: str, pattern, user: str):
-    def timer_out(process):
-        timer.cancel()
-        process.kill()
 
+    p = subprocess.Popen(["python3", exploit, ip], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout = p.communicate(timeout=(0.95 * round_duration))[0]
 
     while True:
@@ -87,6 +85,7 @@ def run_exploit(exploit: str, ip: str, round_duration: int, server_url: str, tok
                 requests.post(server_url + '/api/upload_flags',
                               headers={'X-Auth-Token': token},
                               json=msg)
+            break
     return_code = p.poll()
     if return_code == -9:
         logging.error(f'Exploit {os.path.basename(exploit)} on team {ip} was killed because it took too long to finish')
