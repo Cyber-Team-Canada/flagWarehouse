@@ -68,12 +68,10 @@ def run_exploit(exploit: str, ip: str, round_duration: int, server_url: str, tok
         timer.cancel()
         process.kill()
 
-    p = subprocess.Popen([exploit, ip], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    timer = Timer(math.ceil(0.95 * round_duration), timer_out, args=[p])
+    stdout = p.communicate(timeout=(0.95 * round_duration))[0]
 
-    timer.start()
     while True:
-        output = p.stdout.readline().decode().strip()
+        output = stdout.decode().strip()
         if output == '' and p.poll() is not None:
             break
         if output:
@@ -89,9 +87,7 @@ def run_exploit(exploit: str, ip: str, round_duration: int, server_url: str, tok
                 requests.post(server_url + '/api/upload_flags',
                               headers={'X-Auth-Token': token},
                               json=msg)
-    p.stdout.close()
     return_code = p.poll()
-    timer.cancel()
     if return_code == -9:
         logging.error(f'Exploit {os.path.basename(exploit)} on team {ip} was killed because it took too long to finish')
     elif return_code != 0:
