@@ -22,19 +22,31 @@ cd flagWarehouse/server
 pip3 install -r requirements.txt
 ```
 ### Configuration
+Obtain a `.env` file for the competition, or copy the `.env.template` file and modify. If the situation calls for it, modify the config.py for parameters that do not use `os.getenv()`.
+
+Edit the parameters in [.env](server/application/.env)
+
+- `FW_WEB_PASSWORD`: the password to access the web interface
+- `FW_API_TOKEN`: the token for the flagWarehouse API
+- `FW_TEAM_ID`: your team ID in the competition
+- `FW_VM_SUBNET`: the subnet in which your vulnbox resides (10.FW_VM_SUBNET.FW_TEAM_ID.1)
+- `FW_TEAM_TOKEN`: your team's token
+- `FW_ROUND_DURATION`: the duration of a round (or *tick*) in seconds
+- `FW_SUB_LIMIT`: number of flags that can be sent to the organizers' server each `FW_SUB_INTERVAL`
+- `FW_SUB_INTERVAL`: interval in seconds for the submission; if the submission round takes more than the number of seconds
+- `FW_SUB_HOST`: the domain name or IP address of the submission server
+- `FW_SUB_PORT`: the port number of the submission server
+- `FW_SUB_ENDPOINT`: the endpoint of the submission server (only used in HTTP submissions)
+- `FW_SUB_USE_HTTP`: whether or not flag submission uses an HTTP connection (if false, use TCP)
+- `FW_SUB_ACCEPTED`: the string used to verify whether the verification server accepted the flag
+
 Edit the parameters in [config.py](server/config.py)
 
-- `WEB_PASSWORD`: the password to access the web interface
 - `FLAG_FORMAT`: string containing the regex format of the flags
 - `YOUR_TEAM`: the ip address of your team
 - `TEAMS`: the ip addresses of the teams in the competition
-- `ROUND_DURATION`: the duration of a round (or *tick*) in seconds
 - `FLAG_ALIVE`: the number of seconds a flag can be considered valid
-- `SUB_LIMIT`: number of flags that can be sent to the organizers' server each `SUB_INTERVAL`
-- `SUB_INTERVAL`: interval in seconds for the submission; if the submission round takes more than the number of seconds
-                  specified, the background submission loop will not sleep
-- `SUB_URL`: the url used for the verification of the flags
-- `SUB_ACCEPTED`: the string used to verify whether the verification server accepted the flag
+- `SUB_URL`: the url used for the verification of the flags (only for HTTP submission)
 
 There is also the environment variable `FLASK_DEBUG` in [run.sh](server/run.sh): if set, any edit to the source files
 (including the configuration file) while the server is running will trigger a restart with the new parameters.
