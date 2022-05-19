@@ -3,6 +3,8 @@ import time
 from datetime import datetime, timedelta
 from queue import Queue
 import json
+import socket
+from typing import List
 
 import requests
 from flask import Flask, current_app
@@ -26,6 +28,58 @@ class OrderedSetQueue(Queue):
 
     def _get(self):
         return self.queue.pop()
+
+
+def http_submit(flags: List[str], cursor, i, logger):
+    res = requests.put(current_app.config['SUB_URL'],
+                        headers={'X-Team-Token': current_app.config['TEAM_TOKEN']},
+                        json=flags,
+                        timeout=(current_app.config['SUB_INTERVAL'] / current_app.config['SUB_LIMIT']))
+    j_res = []
+
+    # Check if the gameserver sent a response about the flags or if it sent an error
+    if res.headers['Content-Type'] == 'application/json; charset=utf-8':
+        j_res = json.loads(res.text)
+    else:
+        logger.error(f'Received this response from the gameserver:\n\n{res.text}\n')
+        return False, i
+
+    # executemany() would be better, but it's fine like this.
+    for item in j_res:
+        if (current_app.config['SUB_INVALID'].lower() in item['msg'].lower() or
+                current_app.config['SUB_YOUR_OWN'].lower() in item['msg'].lower() or
+                current_app.config['SUB_STOLEN'].lower() in item['msg'].lower() or
+                current_app.config['SUB_NOP'].lower() in item['msg'].lower()):
+            cursor.execute('''
+            UPDATE flags
+            SET status = ?, server_response = ?
+            WHERE flag = ?
+            ''', (current_app.config['DB_SUB'], current_app.config['DB_ERR'], item['flag']))
+        elif current_app.config['SUB_OLD'].lower() in item['msg'].lower():
+            cursor.execute('''
+            UPDATE flags
+            SET status = ?, server_response = ?
+            WHERE flag = ?
+            ''', (current_app.config['DB_SUB'], current_app.config['DB_EXP'], item['flag']))
+        elif current_app.config['SUB_ACCEPTED'].lower() in item['msg'].lower():
+            cursor.execute('''
+            UPDATE flags
+            SET status = ?, server_response = ?
+            WHERE flag = ?
+            ''', (current_app.config['DB_SUB'], current_app.config['DB_SUCC'], item['flag']))
+        i += 1
+    return True, i
+
+
+def tcp_submit(flags: List[str], cursor, i, logger):
+    for flag in flags:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((current_app.config['SUB_HOST'], current_app.config['SUB_PORT']))
+            s.sendall(bytearray(flag, "utf-8"))
+            response = s.recv(1024)
+            print(f"Received {response!r}")
+            i += 1
+    return True, i
 
 
 def loop(app: Flask):
@@ -57,44 +111,12 @@ def loop(app: Flask):
                     flags = []
                     for _ in range(min(current_app.config['SUB_PAYLOAD_SIZE'], queue_length)):
                         flags.append(queue.get())
-
-                    res = requests.put(current_app.config['SUB_URL'],
-                                       headers={'X-Team-Token': current_app.config['TEAM_TOKEN']},
-                                       json=flags,
-                                       timeout=(current_app.config['SUB_INTERVAL'] / current_app.config['SUB_LIMIT']))
-                    j_res = []
-
-                    # Check if the gameserver sent a response about the flags or if it sent an error
-                    if res.headers['Content-Type'] == 'application/json; charset=utf-8':
-                        j_res = json.loads(res.text)
+                    if current_app.config['SUB_USE_HTTP']:
+                        (success, i) = http_submit(flags, cursor, i, logger)
                     else:
-                        logger.error(f'Received this response from the gameserver:\n\n{res.text}\n')
+                        (success, i) = tcp_submit(flags, cursor, i, logger)
+                    if not success:
                         continue
-
-                    # executemany() would be better, but it's fine like this.
-                    for item in j_res:
-                        if (current_app.config['SUB_INVALID'].lower() in item['msg'].lower() or
-                                current_app.config['SUB_YOUR_OWN'].lower() in item['msg'].lower() or
-                                current_app.config['SUB_STOLEN'].lower() in item['msg'].lower() or
-                                current_app.config['SUB_NOP'].lower() in item['msg'].lower()):
-                            cursor.execute('''
-                            UPDATE flags
-                            SET status = ?, server_response = ?
-                            WHERE flag = ?
-                            ''', (current_app.config['DB_SUB'], current_app.config['DB_ERR'], item['flag']))
-                        elif current_app.config['SUB_OLD'].lower() in item['msg'].lower():
-                            cursor.execute('''
-                            UPDATE flags
-                            SET status = ?, server_response = ?
-                            WHERE flag = ?
-                            ''', (current_app.config['DB_SUB'], current_app.config['DB_EXP'], item['flag']))
-                        elif current_app.config['SUB_ACCEPTED'].lower() in item['msg'].lower():
-                            cursor.execute('''
-                            UPDATE flags
-                            SET status = ?, server_response = ?
-                            WHERE flag = ?
-                            ''', (current_app.config['DB_SUB'], current_app.config['DB_SUCC'], item['flag']))
-                        i += 1
             except requests.exceptions.RequestException:
                 logger.error('Could not send the flags to the server, retrying...')
             finally:
