@@ -5,14 +5,14 @@ class Config(object):
 
     TEAM_ID = os.getenv("FW_TEAM_ID", "27")
     VM_SUBNET = os.getenv("FW_VM_SUBNET", "60")
-    YOUR_TEAM = f"10.{VM_SUBNET}.{TEAM_ID}.1"
+    YOUR_TEAM = f"10.{VM_SUBNET}.{TEAM_ID}.2"
     TEAM_TOKEN = os.getenv("FW_TEAM_TOKEN", "8a8d25f465bec01d")
-    TEAMS = ["127.0.0.1"]
-    # TEAMS.remove(YOUR_TEAM)
+    TEAMS = [f"10.{32 + x // 200}.{x % 200}.2" for x in range(2, 161)]
+    TEAMS.remove(YOUR_TEAM)
 
     ROUND_DURATION = int(os.getenv("FW_ROUND_DURATION", 120))
     FLAG_ALIVE = 5 * ROUND_DURATION
-    FLAG_FORMAT = r"[A-Z0-9]{31}="
+    FLAG_FORMAT = r"SAAR{[A-Za-z0-9]{32}}"
 
     SUB_LIMIT = int(os.getenv("FW_SUB_LIMIT", 1))
     SUB_INTERVAL = int(os.getenv("FW_SUB_INTERVAL", 5))
