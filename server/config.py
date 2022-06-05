@@ -3,12 +3,14 @@ class Config(object):
     WEB_PASSWORD = os.getenv("FW_WEB_PASSWORD", "password")
     API_TOKEN = os.getenv("FW_API_TOKEN", "token")
 
-    TEAM_ID = os.getenv("FW_TEAM_ID", "27")
+    TEAM_ID = os.getenv("FW_TEAM_ID", "3")
     VM_SUBNET = os.getenv("FW_VM_SUBNET", "60")
     YOUR_TEAM = f"10.{VM_SUBNET}.{TEAM_ID}.1"
     TEAM_TOKEN = os.getenv("FW_TEAM_TOKEN", "8a8d25f465bec01d")
-    TEAMS = ["127.0.0.1"]
-    # TEAMS.remove(YOUR_TEAM)
+    TEAMS = []
+    for i in range(1,10):
+        TEAMS.append(f"10.{VM_SUBNET}.{i}.1")
+    TEAMS.remove(YOUR_TEAM)
 
     ROUND_DURATION = int(os.getenv("FW_ROUND_DURATION", 120))
     FLAG_ALIVE = 5 * ROUND_DURATION
