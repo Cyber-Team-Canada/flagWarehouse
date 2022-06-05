@@ -21,6 +21,14 @@ git clone https://github.com/Cyber-Team-Canada/flagWarehouse.git
 cd flagWarehouse/server
 pip3 install -r requirements.txt
 ```
+
+If you have Poetry installed, you can also do the following:
+
+```
+git clone https://github.com/Cyber-Team-Canada/flagWarehouse.git
+cd flagWarehouse
+poetry install
+```
 ### Configuration
 Obtain a `.env` file for the competition, or copy the `.env.template` file and modify. If the situation calls for it, modify the config.py for parameters that do not use `os.getenv()`.
 
@@ -54,6 +62,16 @@ Take note that **the submission loop will not be restarted automatically**, even
 parameters that influence its behaviour, please restart the server manually.
 
 ### Usage
+
+If using Poetry:
+```
+poetry shell
+cd server
+chmod +x run.sh
+./run.sh
+```
+
+If using normal Python dependency management:
 ```
 chmod +x run.sh
 ./run.sh
